@@ -72,13 +72,12 @@ class AudioEngine {
     // Tone.js context indítása (user interaction szükséges)
     try {
       console.log('🔊 [AudioEngine] Calling Tone.start()...');
-      console.log('  - AudioContext state BEFORE:', Tone.context.state);
-      console.log('  - AudioContext sample rate:', Tone.context.sampleRate);
       
       await Tone.start();
       
       console.log('✅ [AudioEngine] Tone.start() completed');
-      console.log('  - AudioContext state AFTER:', Tone.context.state);
+      console.log('  - AudioContext state:', Tone.context.state);
+      console.log('  - AudioContext sample rate:', Tone.context.sampleRate);
       console.log('  - AudioContext current time:', Tone.context.currentTime);
       console.log('  - Tone.Destination connected:', Tone.Destination.volume.value);
     } catch (error) {
