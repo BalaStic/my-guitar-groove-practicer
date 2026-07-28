@@ -1,4 +1,3 @@
-import * as Tone from 'tone';
 import { grooves, intervalMap } from './grooves.js';
 
 class AudioEngine {
@@ -10,6 +9,9 @@ class AudioEngine {
     this.rootNote = 'E2';
     this.bpm = 120;
     
+    // Tone.js - dinamikusan töltjük be az első user gesture után
+    this.Tone = null;
+
     // Synth-ek NEM inicializálása itt - majd a start()-ban!
     this.synthsInitialized = false;
     
@@ -19,6 +21,7 @@ class AudioEngine {
   }
 
   initSynths() {
+    const Tone = this.Tone;
     console.log('🎹 [AudioEngine] Initializing synths...');
     
     // Kick drum - mély basszusos synth
@@ -68,7 +71,15 @@ class AudioEngine {
   async start() {
     console.log('▶️ [AudioEngine] START called');
     console.log('📊 [AudioEngine] Browser info:', navigator.userAgent);
-    
+
+    // Tone.js betöltése csak az első user gesture után (AudioContext autoplay policy fix)
+    if (!this.Tone) {
+      console.log('📦 [AudioEngine] Dynamically importing Tone.js...');
+      this.Tone = await import('tone');
+      console.log('  ✓ Tone.js loaded');
+    }
+    const Tone = this.Tone;
+
     // Tone.js context indítása (user interaction szükséges)
     try {
       console.log('🔊 [AudioEngine] Calling Tone.start()...');
@@ -131,6 +142,7 @@ class AudioEngine {
   }
 
   playStep(time, step) {
+    const Tone = this.Tone;
     const groove = grooves[this.currentGroove];
     const triggers = [];
 
@@ -172,7 +184,7 @@ class AudioEngine {
       this.sequence.dispose();
       this.sequence = null;
     }
-    Tone.Transport.stop();
+    if (this.Tone) this.Tone.Transport.stop();
     this.isPlaying = false;
     this.currentStep = 0;
   }
@@ -194,8 +206,8 @@ class AudioEngine {
 
   setBPM(bpm) {
     this.bpm = bpm;
-    if (this.isPlaying) {
-      Tone.Transport.bpm.value = bpm;
+    if (this.isPlaying && this.Tone) {
+      this.Tone.Transport.bpm.value = bpm;
     }
   }
 }
