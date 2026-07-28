@@ -10,12 +10,12 @@ class AudioEngine {
     this.rootNote = 'E2';
     this.bpm = 120;
     
-    // Synth-ek inicializálása
-    this.initSynths();
+    // Synth-ek NEM inicializálása itt - majd a start()-ban!
+    this.synthsInitialized = false;
     
     // Sequencer inicializálása
     this.sequence = null;
-    console.log('✅ [AudioEngine] Constructor completed');
+    console.log('✅ [AudioEngine] Constructor completed (synths will be lazy-loaded)');
   }
 
   initSynths() {
@@ -84,6 +84,13 @@ class AudioEngine {
     } catch (error) {
       console.error('❌ [AudioEngine] Failed to start audio context:', error);
       throw new Error('Audio initialization failed. Please try again.');
+    }
+
+    // Lazy-load synths - csak első indításkor kell létrehozni
+    if (!this.synthsInitialized) {
+      console.log('🎹 [AudioEngine] First start - initializing synths now with user gesture...');
+      this.initSynths();
+      this.synthsInitialized = true;
     }
 
     const groove = grooves[this.currentGroove];
