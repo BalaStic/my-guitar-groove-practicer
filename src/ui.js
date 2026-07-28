@@ -2,6 +2,7 @@ import { grooves } from './grooves.js';
 
 class UIController {
   constructor(audioEngine) {
+    console.log('🎛️ [UIController] Constructor called');
     this.audioEngine = audioEngine;
     this.initElements();
     this.initStepDisplay();
@@ -9,6 +10,7 @@ class UIController {
     
     // Audio engine step callback
     this.audioEngine.onStepChange = (step) => this.updateStepDisplay(step);
+    console.log('✅ [UIController] Initialized');
   }
 
   initElements() {
@@ -77,20 +79,25 @@ class UIController {
   }
 
   async togglePlayback() {
+    console.log('🔘 [UIController] Play button clicked');
+    console.log('  - Current playing state:', this.audioEngine.isPlaying);
+    
     if (!this.audioEngine.isPlaying) {
       // Play
       try {
+        console.log('▶️ [UIController] Starting playback...');
         this.playButton.disabled = true;
         this.buttonText.textContent = 'STARTING...';
         
         await this.audioEngine.start();
         
+        console.log('✅ [UIController] Playback started successfully');
         this.playButton.classList.add('playing');
         this.playIcon.textContent = '⏸';
         this.buttonText.textContent = 'STOP';
         this.playButton.disabled = false;
       } catch (error) {
-        console.error('Error starting playback:', error);
+        console.error('❌ [UIController] Error starting playback:', error);
         alert('Failed to start audio. Please make sure you clicked the button and your browser allows audio playback.');
         this.playButton.disabled = false;
         this.playIcon.textContent = '▶';
@@ -98,6 +105,7 @@ class UIController {
       }
     } else {
       // Stop
+      console.log('⏹️ [UIController] Stopping playback...');
       this.audioEngine.stop();
       this.playButton.classList.remove('playing');
       this.playIcon.textContent = '▶';
@@ -105,6 +113,7 @@ class UIController {
       
       // Step display visszaállítása
       this.updateStepDisplay(-1);
+      console.log('✅ [UIController] Playback stopped');
     }
   }
 }
