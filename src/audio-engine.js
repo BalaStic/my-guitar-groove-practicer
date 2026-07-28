@@ -57,8 +57,14 @@ class AudioEngine {
 
   async start() {
     // Tone.js context indítása (user interaction szükséges)
-    await Tone.start();
-    console.log('Audio context started');
+    try {
+      await Tone.start();
+      console.log('Audio context started successfully');
+      console.log('Audio context state:', Tone.context.state);
+    } catch (error) {
+      console.error('Failed to start audio context:', error);
+      throw new Error('Audio initialization failed. Please try again.');
+    }
 
     const groove = grooves[this.currentGroove];
     const stepsPerBar = groove.stepsPerBar;

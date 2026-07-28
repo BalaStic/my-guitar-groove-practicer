@@ -79,10 +79,23 @@ class UIController {
   async togglePlayback() {
     if (!this.audioEngine.isPlaying) {
       // Play
-      await this.audioEngine.start();
-      this.playButton.classList.add('playing');
-      this.playIcon.textContent = '⏸';
-      this.buttonText.textContent = 'STOP';
+      try {
+        this.playButton.disabled = true;
+        this.buttonText.textContent = 'STARTING...';
+        
+        await this.audioEngine.start();
+        
+        this.playButton.classList.add('playing');
+        this.playIcon.textContent = '⏸';
+        this.buttonText.textContent = 'STOP';
+        this.playButton.disabled = false;
+      } catch (error) {
+        console.error('Error starting playback:', error);
+        alert('Failed to start audio. Please make sure you clicked the button and your browser allows audio playback.');
+        this.playButton.disabled = false;
+        this.playIcon.textContent = '▶';
+        this.buttonText.textContent = 'PLAY';
+      }
     } else {
       // Stop
       this.audioEngine.stop();
