@@ -55,6 +55,24 @@ class UIController {
     // Play/Stop button
     this.playButton.addEventListener('click', () => this.togglePlayback());
 
+    // iOS/Safari: az AudioContext-et az ELSŐ user gesture-ön belül,
+    // SZINKRONBAN kell feloldani (bármilyen await előtt). Egyszeri unlock
+    // bármilyen érintésre/kattintásra az egész oldalon.
+    const unlockOnce = () => {
+      try {
+        this.audioEngine.unlock();
+      } catch (e) {
+        console.warn('Audio unlock attempt failed:', e);
+      }
+      document.removeEventListener('touchend', unlockOnce);
+      document.removeEventListener('pointerdown', unlockOnce);
+      document.removeEventListener('click', unlockOnce);
+    };
+    document.addEventListener('touchend', unlockOnce, { once: false });
+    document.addEventListener('pointerdown', unlockOnce, { once: false });
+    document.addEventListener('click', unlockOnce, { once: false });
+
+
     // Style selector
     this.styleSelect.addEventListener('change', (e) => {
       const grooveName = e.target.value;

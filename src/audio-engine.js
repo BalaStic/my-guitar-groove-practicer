@@ -1,3 +1,4 @@
+import * as Tone from 'tone';
 import { grooves, intervalMap } from './grooves.js';
 
 class AudioEngine {
@@ -8,20 +9,33 @@ class AudioEngine {
     this.currentGroove = 'rock';
     this.rootNote = 'E2';
     this.bpm = 120;
-    
-    // Tone.js - dinamikusan töltjük be az első user gesture után
-    this.Tone = null;
+
+    // Tone.js referencia (statikus import - iOS gesture unlock miatt NEM dinamikus!)
+    this.Tone = Tone;
 
     // Synth-ek NEM inicializálása itt - majd a start()-ban!
     this.synthsInitialized = false;
-    
+    this.audioUnlocked = false;
+
     // Sequencer inicializálása
     this.sequence = null;
     console.log('✅ [AudioEngine] Constructor completed (synths will be lazy-loaded)');
   }
 
+  /**
+   * iOS/Safari audio unlock. FONTOS: ezt SZINKRONBAN kell hívni egy user
+   * gesture (tap/click) call-stack-jén belül, BÁRMILYEN await ELŐTT.
+   * A Tone.start() belül szinkronban meghívja az AudioContext.resume()-ot.
+   */
+  unlock() {
+    if (this.audioUnlocked) return Promise.resolve();
+    console.log('🔓 [AudioEngine] Unlocking audio (Tone.start)...');
+    const p = Tone.start();
+    this.audioUnlocked = true;
+    return p;
+  }
+
   initSynths() {
-    const Tone = this.Tone;
     console.log('🎹 [AudioEngine] Initializing synths...');
     
     // Kick drum - mély basszusos synth
@@ -72,19 +86,13 @@ class AudioEngine {
     console.log('▶️ [AudioEngine] START called');
     console.log('📊 [AudioEngine] Browser info:', navigator.userAgent);
 
-    // Tone.js betöltése csak az első user gesture után (AudioContext autoplay policy fix)
-    if (!this.Tone) {
-      console.log('📦 [AudioEngine] Dynamically importing Tone.js...');
-      this.Tone = await import('tone');
-      console.log('  ✓ Tone.js loaded');
-    }
-    const Tone = this.Tone;
-
-    // Tone.js context indítása (user interaction szükséges)
+    // Tone.js context indítása (user interaction szükséges).
+    // FIGYELEM: ne legyen await ez ELŐTT ebben a hívási láncban (iOS miatt)!
     try {
       console.log('🔊 [AudioEngine] Calling Tone.start()...');
       
       await Tone.start();
+      this.audioUnlocked = true;
       
       console.log('✅ [AudioEngine] Tone.start() completed');
       console.log('  - AudioContext state:', Tone.context.state);
@@ -142,7 +150,6 @@ class AudioEngine {
   }
 
   playStep(time, step) {
-    const Tone = this.Tone;
     const groove = grooves[this.currentGroove];
     const triggers = [];
 
@@ -184,7 +191,7 @@ class AudioEngine {
       this.sequence.dispose();
       this.sequence = null;
     }
-    if (this.Tone) this.Tone.Transport.stop();
+    Tone.Transport.stop();
     this.isPlaying = false;
     this.currentStep = 0;
   }
@@ -206,8 +213,8 @@ class AudioEngine {
 
   setBPM(bpm) {
     this.bpm = bpm;
-    if (this.isPlaying && this.Tone) {
-      this.Tone.Transport.bpm.value = bpm;
+    if (this.isPlaying) {
+      Tone.Transport.bpm.value = bpm;
     }
   }
 }
