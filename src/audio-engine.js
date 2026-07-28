@@ -30,10 +30,50 @@ class AudioEngine {
   unlock() {
     if (this.audioUnlocked) return Promise.resolve();
     console.log('🔓 [AudioEngine] Unlocking audio (Tone.start)...');
+    // iOS: némító (mute) kapcsoló megkerülése - "playback" audio session kikényszerítése
+    this.unmuteIOS();
     const p = Tone.start();
     this.audioUnlocked = true;
     return p;
   }
+
+  /**
+   * iOS "unmute" trükk: iOS-en a Web Audio alapból követi a fizikai némító
+   * kapcsolót (silent switch). Ha egy rövid, néma, inline <audio> elemet
+   * lejátszunk egy user gesture-ön belül, az iOS "playback" audio session
+   * kategóriába vált, így a Web Audio akkor is szól, ha a csengő némítva van.
+   * A néma WAV egy data URI-ként van beágyazva (nincs külső fájl).
+   */
+  unmuteIOS() {
+    if (this._iosUnmuted) return;
+    try {
+      const silentWav =
+        'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAAAA';
+      const el = document.createElement('audio');
+      el.setAttribute('playsinline', '');
+      el.setAttribute('webkit-playsinline', '');
+      el.preload = 'auto';
+      el.loop = true;
+      el.src = silentWav;
+      el.volume = 0.001;
+      const playPromise = el.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise
+          .then(() => {
+            console.log('  ✓ iOS silent audio playing (playback session engaged)');
+          })
+          .catch((err) => {
+            console.warn('  ⚠️ iOS silent audio play failed:', err);
+          });
+      }
+      // Megtartjuk a referenciát, hogy ne törölje a GC és folytonos maradjon a session.
+      this._iosUnmuteEl = el;
+      this._iosUnmuted = true;
+    } catch (e) {
+      console.warn('  ⚠️ unmuteIOS failed:', e);
+    }
+  }
+
 
   initSynths() {
     console.log('🎹 [AudioEngine] Initializing synths...');
