@@ -22,7 +22,28 @@ class UIController {
     this.bpmSlider = document.getElementById('bpm-slider');
     this.bpmValue = document.getElementById('bpm-value');
     this.stepDisplay = document.getElementById('step-display');
+    this.audioStatus = document.getElementById('audio-status');
+    this.audioStatusText = this.audioStatus
+      ? this.audioStatus.querySelector('.audio-status-text')
+      : null;
   }
+
+  updateAudioStatus() {
+    if (!this.audioStatus) return;
+    const state = this.audioEngine.getContextState();
+    this.audioStatus.classList.remove('ready', 'suspended');
+    if (state === 'running') {
+      this.audioStatus.classList.add('ready');
+      if (this.audioStatusText) this.audioStatusText.textContent = '🔊 Audio ready';
+    } else if (state === 'suspended') {
+      this.audioStatus.classList.add('suspended');
+      if (this.audioStatusText)
+        this.audioStatusText.textContent = '🔇 Audio paused — tap the screen (check the mute switch)';
+    } else {
+      if (this.audioStatusText) this.audioStatusText.textContent = 'Tap PLAY to enable audio';
+    }
+  }
+
 
   initStepDisplay() {
     // Kezdetben 16 lépés létrehozása (rock groove)
@@ -60,7 +81,7 @@ class UIController {
     // bármilyen érintésre/kattintásra az egész oldalon.
     const unlockOnce = () => {
       try {
-        this.audioEngine.unlock();
+        Promise.resolve(this.audioEngine.unlock()).finally(() => this.updateAudioStatus());
       } catch (e) {
         console.warn('Audio unlock attempt failed:', e);
       }
@@ -68,6 +89,7 @@ class UIController {
       document.removeEventListener('pointerdown', unlockOnce);
       document.removeEventListener('click', unlockOnce);
     };
+
     document.addEventListener('touchend', unlockOnce, { once: false });
     document.addEventListener('pointerdown', unlockOnce, { once: false });
     document.addEventListener('click', unlockOnce, { once: false });
@@ -114,6 +136,8 @@ class UIController {
         this.playIcon.textContent = '⏸';
         this.buttonText.textContent = 'STOP';
         this.playButton.disabled = false;
+        this.updateAudioStatus();
+
       } catch (error) {
         console.error('❌ [UIController] Error starting playback:', error);
         alert('Failed to start audio. Please make sure you clicked the button and your browser allows audio playback.');

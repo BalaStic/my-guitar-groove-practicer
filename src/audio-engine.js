@@ -257,6 +257,19 @@ class AudioEngine {
       Tone.Transport.bpm.value = bpm;
     }
   }
+
+  /**
+   * Az AudioContext aktuális állapota: 'running' | 'suspended' | 'closed'
+   * (távoli hibakereséshez / on-screen státusz kijelzőhöz).
+   */
+  getContextState() {
+    try {
+      return Tone.context.state;
+    } catch (e) {
+      return 'unknown';
+    }
+  }
 }
+
 
 export default AudioEngine;

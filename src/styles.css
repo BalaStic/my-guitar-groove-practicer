@@ -143,6 +143,44 @@ input[type="range"]::-moz-range-thumb {
     font-size: 1.2rem;
 }
 
+.audio-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: -20px 0 30px;
+    font-size: 0.9rem;
+    color: #888;
+    transition: color 0.3s;
+}
+
+.audio-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #c0c0c0;
+    transition: background 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+}
+
+.audio-status.ready {
+    color: #2e7d32;
+}
+
+.audio-status.ready .audio-status-dot {
+    background: #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.7);
+}
+
+.audio-status.suspended {
+    color: #e65100;
+}
+
+.audio-status.suspended .audio-status-dot {
+    background: #ff9800;
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.7);
+}
+
 .visualizer {
     background: #f8f9fa;
     padding: 30px;
